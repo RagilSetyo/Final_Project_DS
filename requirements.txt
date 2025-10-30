@@ -1,1 +1,8 @@
 streamlit
+pandas
+numpy
+matplotlib
+scikit-learn
+xgboost
+Random Forest
+Linear Regression
