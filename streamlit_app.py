@@ -20,7 +20,7 @@ from sklearn.metrics import (
 # KONFIGURASI HALAMAN
 # --------------------------
 st.set_page_config(page_title="Analisis Harga Rumah", layout="wide")
-st.title("🏠 Analisis Harga Rumah — EDA, Preprocessing, Modeling & Feature Importance")
+st.title("🏠 Analisis Harga Rumah di Washington")
 
 # --------------------------
 # LOAD DATA
@@ -40,11 +40,12 @@ if house is not None:
     st.success("✅ Dataset berhasil dimuat!")
 
     # Tabs utama
-    tab1, tab2, tab3, tab4 = st.tabs([
+    tab1, tab2, tab3, tab4, tab5 = st.tabs([
         "📊 EDA",
         "🧩 Preprocessing",
         "🤖 Modeling",
-        "📈 Feature Importance"
+        "📈 Feature Importance",
+        "🏠 Kesimpulan"
     ])
 
     # ==========================================================
@@ -85,6 +86,7 @@ if house is not None:
         # Plot City
         fig1, ax1 = plt.subplots(figsize=(10, 5))
         sns.barplot(x=avg_city.values, y=avg_city.index, palette="viridis", ax=ax1)
+        ax1.set_title("Rata-rata Harga Rumah per Kota", fontsize=14, fontweight='bold')
         for i, v in enumerate(avg_city.values):
             ax1.text(v, i, f"${v:,.0f}", va="center")
         st.pyplot(fig1)
@@ -92,6 +94,7 @@ if house is not None:
         # Plot StateZip
         fig2, ax2 = plt.subplots(figsize=(10, 5))
         sns.barplot(x=avg_statezip.values, y=avg_statezip.index, palette="coolwarm", ax=ax2)
+        ax2.set_title("Rata-rata Harga Rumah per Statezip", fontsize=14, fontweight='bold')
         for i, v in enumerate(avg_statezip.values):
             ax2.text(v, i, f"${v:,.0f}", va="center")
         st.pyplot(fig2)
@@ -132,6 +135,7 @@ if house is not None:
 
         # Seleksi fitur & VIF
         st.subheader("📉 Seleksi Fitur dan VIF")
+        st.write("Pada kasus ini, kolom sqft_living akan di drop")
         num_train = num_train.drop(columns=['sqft_living'])
         X_test = X_test.drop(columns=['sqft_living'])
         X_const = add_constant(num_train)
@@ -222,7 +226,7 @@ if house is not None:
             y_pred_test = model_RF.predict(X_test_scaled)
 
             results.append({
-                "Model": "Random Forest",
+                "Model": "Random Forest Regressor",
                 "R² Train": r2_score(y_train, y_pred_train),
                 "MAE Train": mean_absolute_error(y_train, y_pred_train),
                 "RMSE Train": np.sqrt(mean_squared_error(y_train, y_pred_train)),
@@ -246,7 +250,7 @@ if house is not None:
             y_pred_test = model_XGB.predict(X_test_scaled)
 
             results.append({
-                "Model": "XGBoost",
+                "Model": "XGBoost Regressor",
                 "R² Train": r2_score(y_train, y_pred_train),
                 "MAE Train": mean_absolute_error(y_train, y_pred_train),
                 "RMSE Train": np.sqrt(mean_squared_error(y_train, y_pred_train)),
@@ -304,7 +308,37 @@ if house is not None:
                         f"{width:.4f}", va='center', ha='left')
 
             st.pyplot(fig)
+            st.markdown("""
+### Feature Importance : 
+
+Diketahui bahwa **fitur yang paling berpengaruh** pada model adalah **Statezip** dan **City**,  
+terutama pada **statezip_WA 98038**, di mana fitur ini memiliki pengaruh paling kuat dengan nilai **0.0285**.
+
+📍 **Statezip_WA 98038** adalah rumah yang berada di **kota Maple Valley**  
+dengan **kode pos 98038**.
+""")
         else:
             st.warning("⚠️ Jalankan modeling dulu agar XGBoost tersedia.")
+
+    with tab5:
+        st.header("Kesimpulan")
+        st.markdown("""
+**Model XGBoost Regressor** menunjukkan performa terbaik.
+
+- Faktor utama yang mempengaruhi: **Statezip_WA** dan **City**  
+- **MAE:** $66,794 per rumah  
+- **RMSE:** $95,761 per rumah  
+- **R² Score:** 80.00%  
+- **Rata-rata harga rumah:** $487,456.90  
+
+Model ini mampu memprediksi harga rumah dengan akurasi yang cukup tinggi,
+menunjukkan bahwa faktor lokasi memiliki peranan yang sangat penting.
+""")
+        st.title("📊 Evaluasi Akurasi Model")
+
+        # Menampilkan gambar
+        st.image("hasil akurasi mae rsme.PNG", 
+         caption="Hasil Perhitungan Akurasi Berdasarkan MAE dan RMSE", 
+         use_container_width=True)
 else:
     st.stop()
